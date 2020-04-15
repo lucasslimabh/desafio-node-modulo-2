@@ -6,6 +6,12 @@ interface Balance {
   total: number;
 }
 
+interface TransactionDTO{
+  title : string,
+  value : number,
+  type : 'income' | 'outcome'
+}
+
 class TransactionsRepository {
   private transactions: Transaction[];
 
@@ -14,15 +20,51 @@ class TransactionsRepository {
   }
 
   public all(): Transaction[] {
-    // TODO
+
+    return this.transactions;
+
   }
 
-  public getBalance(): Balance {
-    // TODO
+  public getBalance( transactions :  Transaction[] ): Balance {
+
+    let income = transactions.filter(transaction => transaction.type === 'income')
+    .reduce((index, value) => {
+       return index + value.value;
+    }, 0);
+
+
+    let outcome = transactions.filter(transaction => {
+      if (transaction.type === 'outcome') {
+        return  transaction.value;
+      }
+    }).reduce((index, value) => {
+      return index + value.value;
+    }, 0 );
+
+
+    let balance = {
+      income,
+      outcome,
+      total : income - outcome
+    }
+
+    return balance;
+
   }
 
-  public create(): Transaction {
-    // TODO
+  public create({title, value, type} : TransactionDTO): Transaction {
+
+    let balance = this.getBalance(this.transactions);
+
+    if (type === 'outcome' && (balance.total - value < 0)) {
+      throw Error("Value cannot be inserted!")
+    }
+
+    const transaction = new Transaction({title, value, type})
+
+    this.transactions.push(transaction);
+
+    return transaction;
   }
 }
 
